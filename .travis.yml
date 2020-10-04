@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2013 The freestyle-hid Authors
+#
+# SPDX-License-Identifier: 0BSD
+
+dist: xenial
+
+language: python
+
+matrix:
+  include:
+    - python: 3.7
+    - python: 3.8
+      env: PYTEST_OPTIONS="--mypy"
+    - python: 3.9-dev
+
+install:
+  - pip install .[dev]
+
+script:
+  - pytest $PYTEST_OPTIONS
