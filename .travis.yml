@@ -14,7 +14,7 @@ matrix:
     - python: 3.9-dev
 
 install:
-  - pip install .[dev]
+  - pip install .[dev,tools]
 
 script:
   - pytest $PYTEST_OPTIONS
