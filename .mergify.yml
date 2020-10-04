@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2013 The freestyle-hid Authors
+#
+# SPDX-License-Identifier: 0BSD
+
+pull_request_rules:
+  - name: Automatic merge on approval
+    conditions:
+      - "#approved-reviews-by>=1"
+      - "status-success=Travis CI - Pull Request"
+      - "status-success=pre-commit"
+    actions:
+      merge:
+        method: rebase
+  - name: Automatic merge from Flameeyes
+    conditions:
+      - "author=Flameeyes"
+      - "status-success=Travis CI - Pull Request"
+      - "status-success=pre-commit"
+    actions:
+      merge:
+        method: rebase
