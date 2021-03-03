@@ -39,6 +39,13 @@ click_log.basic_config(logger)
     type=int,
     help="Optional product ID (in alternative to the device path)",
 )
+@click.option(
+    "--encoding",
+    "-e",
+    type=str,
+    help="Encoding to use to decode commands returned by the meter",
+    default="ascii",
+)
 @click.argument(
     "device-path",
     type=click.Path(exists=True, dir_okay=False, writable=True, allow_dash=False),
@@ -51,6 +58,7 @@ def main(
     text_reply_type: int,
     product_id: Optional[int],
     device_path: Optional[pathlib.Path],
+    encoding: str,
 ):
     if not product_id and not device_path:
         raise click.UsageError(
@@ -58,7 +66,7 @@ def main(
         )
 
     session = freestyle_hid.Session(
-        product_id, device_path, text_command_type, text_reply_type
+        product_id, device_path, text_command_type, text_reply_type, encoding=encoding
     )
 
     session.connect()

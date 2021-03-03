@@ -118,11 +118,13 @@ class Session:
         device_path: Optional[pathlib.Path],
         text_message_type: int,
         text_reply_message_type: int,
+        encoding: str = "ascii",
     ) -> None:
         self._handle = HidWrapper.open(device_path, ABBOTT_VENDOR_ID, product_id)
 
         self._text_message_type = text_message_type
         self._text_reply_message_type = text_reply_message_type
+        self._encoding = encoding
 
     def connect(self):
         """Open connection to the device, starting the knocking sequence."""
@@ -191,7 +193,7 @@ class Session:
 
         return message
 
-    def _send_text_command(self, command: bytes) -> bytes:
+    def _send_text_command_raw(self, command: bytes) -> bytes:
         """Send a command to the device that expects a text reply."""
         self.send_command(self._text_message_type, command)
 
@@ -226,12 +228,8 @@ class Session:
 
         return message
 
-    def send_text_command(self, command: bytes) -> bytes:
-        # If there is anything in the response that is not ASCII-safe, this is
-        # probably in the patient name. The Windows utility does not seem to
-        # validate those, so just replace anything non-ASCII with the correct
-        # unknown codepoint.
-        return self._send_text_command(command).decode("ascii", "replace")
+    def send_text_command(self, command: bytes) -> str:
+        return self._send_text_command_raw(command).decode(self._encoding, "replace")
 
     def query_multirecord(self, command: bytes) -> Iterator[Sequence[str]]:
         """Queries for, and returns, "multirecords" results.
@@ -250,7 +248,7 @@ class Session:
           A CSV reader object that returns a record for each line in the
           reply buffer.
         """
-        message = self._send_text_command(command)
+        message = self._send_text_command_raw(command)
         logging.debug(f"Received multi-record message:\n{message!r}")
         if message == b"Log Empty\r\n":
             return iter(())
@@ -259,12 +257,12 @@ class Session:
         if not match:
             raise CommandError(repr(message))
 
-        records_str = match.group("message")
-        _verify_checksum(records_str, match.group("checksum"))
+        records_raw = match.group("message")
+        _verify_checksum(records_raw, match.group("checksum"))
 
         # Decode here with replacement; the software does not deal with UTF-8
         # correctly, and appears to truncate incorrectly the strings.
-        records_str = records_str.decode("utf-8", "replace")
+        records_str = records_raw.decode(self._encoding, "replace")
 
         logging.debug(f"Received multi-record string: {records_str}")
 
