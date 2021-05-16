@@ -6,15 +6,15 @@ pull_request_rules:
   - name: Automatic merge on approval
     conditions:
       - "#approved-reviews-by>=1"
-      - "status-success=test (ubuntu-latest, 3.7)"
-      - "status-success=test (ubuntu-latest, 3.8)"
-      - "status-success=test (ubuntu-latest, 3.9)"
-      - "status-success=test (macos-latest, 3.7)"
-      - "status-success=test (macos-latest, 3.8)"
-      - "status-success=test (macos-latest, 3.9)"
-      - "status-success=test (windows-latest, 3.7)"
-      - "status-success=test (windows-latest, 3.8)"
-      - "status-success=test (windows-latest, 3.9)"
+      - "status-success=pytest (ubuntu-latest, 3.7)"
+      - "status-success=pytest (ubuntu-latest, 3.8)"
+      - "status-success=pytest (ubuntu-latest, 3.9)"
+      - "status-success=pytest (macos-latest, 3.7)"
+      - "status-success=pytest (macos-latest, 3.8)"
+      - "status-success=pytest (macos-latest, 3.9)"
+      - "status-success=pytest (windows-latest, 3.7)"
+      - "status-success=pytest (windows-latest, 3.8)"
+      - "status-success=pytest (windows-latest, 3.9)"
       - "status-success=pre-commit"
     actions:
       merge:
@@ -22,15 +22,15 @@ pull_request_rules:
   - name: Automatic merge from Flameeyes
     conditions:
       - "author=Flameeyes"
-      - "status-success=test (ubuntu-latest, 3.7)"
-      - "status-success=test (ubuntu-latest, 3.8)"
-      - "status-success=test (ubuntu-latest, 3.9)"
-      - "status-success=test (macos-latest, 3.7)"
-      - "status-success=test (macos-latest, 3.8)"
-      - "status-success=test (macos-latest, 3.9)"
-      - "status-success=test (windows-latest, 3.7)"
-      - "status-success=test (windows-latest, 3.8)"
-      - "status-success=test (windows-latest, 3.9)"
+      - "status-success=pytest (ubuntu-latest, 3.7)"
+      - "status-success=pytest (ubuntu-latest, 3.8)"
+      - "status-success=pytest (ubuntu-latest, 3.9)"
+      - "status-success=pytest (macos-latest, 3.7)"
+      - "status-success=pytest (macos-latest, 3.8)"
+      - "status-success=pytest (macos-latest, 3.9)"
+      - "status-success=pytest (windows-latest, 3.7)"
+      - "status-success=pytest (windows-latest, 3.8)"
+      - "status-success=pytest (windows-latest, 3.9)"
       - "status-success=pre-commit"
     actions:
       merge:
