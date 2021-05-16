@@ -33,7 +33,7 @@ To set up your development environment follow these guidelines:
 
 ```shell
 $ git clone https://github.com/glucometers-tech/freestyle-hid.git
-$ cd glucometerutils
+$ cd freestyle-hid
 $ python3 -m venv --python=python3.7
 $ . venv/bin/activate
 $ pip install -e .[dev,tools]
