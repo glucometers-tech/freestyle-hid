@@ -109,8 +109,11 @@ def main(
     if not device_address:
         possible_addresses = list(session.find_devices_by_ids(_ABBOTT_VENDOR_ID, None))
         if len(possible_addresses) > 1:
+            possible_addresses_str = ", ".join(
+                str(address) for address in possible_addresses
+            )
             raise click.UsageError(
-                f"Multiple Abbott devices found, please select one of {','.join(possible_addresses)}"
+                f"Multiple Abbott devices found, please select one of {possible_addresses_str}"
             )
         elif len(possible_addresses) == 0:
             raise click.UsageError("No Abbott devices found.")
