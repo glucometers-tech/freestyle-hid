@@ -7,13 +7,14 @@
 
 import logging
 import sys
-from typing import BinaryIO, Sequence
+from typing import BinaryIO, Optional, Sequence
 
 import click
 import click_log
 import construct
 import usbmon
 import usbmon.pcapng
+from usbmon.tools import _utils
 
 logger = logging.getLogger()
 click_log.basic_config(logger)
@@ -65,13 +66,18 @@ _CHALLENGE_RESPONSE = construct.Struct(
         "Device address (busnum.devnum) of the device to extract capture"
         " of. If none provided, device descriptors will be relied on."
     ),
+    type=_utils.DeviceAddressType(),
 )
 @click.argument(
     "pcap-files",
     type=click.File(mode="rb"),
     nargs=None,
 )
-def main(*, device_address: str, pcap_files: Sequence[BinaryIO]):
+def main(
+    *,
+    device_address: Optional[usbmon.addresses.DeviceAddress],
+    pcap_files: Sequence[BinaryIO],
+):
     if sys.version_info < (3, 7):
         raise Exception("Unsupported Python version, please use at least Python 3.7.")
 
@@ -93,6 +99,8 @@ def main(*, device_address: str, pcap_files: Sequence[BinaryIO]):
         else:
             device_address = descriptor.address
 
+        assert device_address is not None
+
         if device_address in session.device_descriptors:
             descriptor = session.device_descriptors[device_address]
             assert descriptor.vendor_id == _ABBOTT_VENDOR_ID
@@ -109,7 +117,7 @@ def main(*, device_address: str, pcap_files: Sequence[BinaryIO]):
             if not first.type == usbmon.constants.PacketType.SUBMISSION:
                 continue
 
-            if not first.address.startswith(f"{device_address}."):
+            if not first.address.device_address == device_address:
                 # No need to check second, they will be linked.
                 continue
 

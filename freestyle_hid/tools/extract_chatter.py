@@ -8,7 +8,7 @@
 import logging
 import sys
 import textwrap
-from typing import BinaryIO
+from typing import BinaryIO, Optional
 
 import click
 import click_log
@@ -17,6 +17,7 @@ import usbmon
 import usbmon.chatter
 import usbmon.pcapng
 import usbmon.support.hid
+from usbmon.tools import _utils
 
 logger = logging.getLogger()
 click_log.basic_config(logger)
@@ -64,6 +65,7 @@ _ENCRYPTED_MESSAGE = construct.Struct(
         "Device address (busnum.devnum) of the device to extract capture"
         " of. If none provided, device descriptors will be relied on."
     ),
+    type=_utils.DeviceAddressType(),
 )
 @click.option(
     "--encrypted-protocol / --no-encrypted-protocol",
@@ -95,7 +97,7 @@ _ENCRYPTED_MESSAGE = construct.Struct(
 )
 def main(
     *,
-    device_address: str,
+    device_address: Optional[usbmon.addresses.DeviceAddress],
     encrypted_protocol: bool,
     verbose_encryption_setup: bool,
     print_keepalive: bool,
