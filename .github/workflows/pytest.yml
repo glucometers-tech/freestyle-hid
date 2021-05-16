@@ -9,7 +9,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  pytest:
 
     runs-on: ${{ matrix.os }}
     strategy:
