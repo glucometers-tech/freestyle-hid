@@ -15,7 +15,6 @@ from ._exceptions import HIDError
 
 
 class HidWrapper(abc.ABC):
-
     _handle: Union[BinaryIO, "hid.device"]
 
     def write(self, report: bytes) -> None:
