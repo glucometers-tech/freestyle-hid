@@ -11,15 +11,15 @@ from typing import AnyStr, Callable, Iterator, Optional, Sequence, Tuple
 import construct
 
 from ._exceptions import ChecksumError, CommandError
+from ._freestyle_encryption import SpeckCMAC, SpeckEncrypt
 from ._hidwrapper import HidWrapper
-from ._freestyle_encryption import SpeckEncrypt, SpeckCMAC
 
 ABBOTT_VENDOR_ID = 0x1A61
 
-_AUTH_ENC_MASTER_KEY = 0xdeadbeef
-_AUTH_MAC_MASTER_KEY = 0xdeadbeef
-_SESS_ENC_MASTER_KEY = 0xdeadbeef
-_SESS_MAC_MASTER_KEY = 0xdeadbeef
+_AUTH_ENC_MASTER_KEY = 0xDEADBEEF
+_AUTH_MAC_MASTER_KEY = 0xDEADBEEF
+_SESS_ENC_MASTER_KEY = 0xDEADBEEF
+_SESS_MAC_MASTER_KEY = 0xDEADBEEF
 
 _INIT_COMMAND = 0x01
 _INIT_RESPONSE = 0x71
@@ -142,30 +142,36 @@ class Session:
         assert response[0] == _ENCRYPTION_SETUP_RESPONSE
         assert response[1][0] == 0x16
         reader_rand = response[1][1:9]
-        iv = int.from_bytes(response[1][9:16], 'big', signed=False)
+        iv = int.from_bytes(response[1][9:16], "big", signed=False)
         driver_rand = random.randbytes(8)
         resp_enc = auth_enc.encrypt(iv, reader_rand + driver_rand)
         resp_mac = auth_mac.sign(b"\x14\x1a\x17" + resp_enc + b"\x01")
-        resp_mac = int.to_bytes(resp_mac, 8, byteorder='little', signed=False)
-        self.send_command(_ENCRYPTION_SETUP_COMMAND, b"\x17" + resp_enc + b"\x01" + resp_mac)
+        resp_mac = int.to_bytes(resp_mac, 8, byteorder="little", signed=False)
+        self.send_command(
+            _ENCRYPTION_SETUP_COMMAND, b"\x17" + resp_enc + b"\x01" + resp_mac
+        )
         response = self.read_response()
         assert response[0] == _ENCRYPTION_SETUP_RESPONSE
         assert response[1][0] == 0x18
         mac = auth_mac.sign(b"\x33\x22" + response[1][:24])
-        mac = int.to_bytes(mac, 8, byteorder='little', signed=False)
+        mac = int.to_bytes(mac, 8, byteorder="little", signed=False)
         assert mac == response[1][24:32]
-        iv = int.from_bytes(response[1][17:24], 'big', signed=False)
+        iv = int.from_bytes(response[1][17:24], "big", signed=False)
         resp_dec = auth_enc.decrypt(iv, response[1][1:17])
         assert resp_dec[:8] == driver_rand
         assert resp_dec[8:] == reader_rand
 
         crypt = SpeckCMAC(_SESS_ENC_MASTER_KEY)
-        ses_enc_key = crypt.derive("SessnEnc".encode(), serial + reader_rand + driver_rand)
+        ses_enc_key = crypt.derive(
+            "SessnEnc".encode(), serial + reader_rand + driver_rand
+        )
         crypt = SpeckCMAC(_SESS_MAC_MASTER_KEY)
-        ses_mac_key = crypt.derive("SessnMAC".encode(), serial + reader_rand + driver_rand)
+        ses_mac_key = crypt.derive(
+            "SessnMAC".encode(), serial + reader_rand + driver_rand
+        )
         self.crypt_enc = SpeckEncrypt(ses_enc_key)
         self.crypt_mac = SpeckCMAC(ses_mac_key)
-        #print("HANDSHAKE SUCCESSFUL!")
+        # print("HANDSHAKE SUCCESSFUL!")
 
     def connect(self):
         if self._encrypted_protocol:
@@ -186,15 +192,15 @@ class Session:
         # Not giving a f**k about the IV counter for now
         output[57:61] = bytes(4)
         mac = self.crypt_mac.sign(output[1:61])
-        output[61:65] = int.to_bytes(mac, 8, byteorder='little', signed=False)[4:]
+        output[61:65] = int.to_bytes(mac, 8, byteorder="little", signed=False)[4:]
         return bytes(output)
 
     def decrypt_message(self, packet: bytes):
         output = bytearray(packet)
         mac = self.crypt_mac.sign(packet[:60])
-        mac = int.to_bytes(mac, 8, byteorder='little', signed=False)[4:]
+        mac = int.to_bytes(mac, 8, byteorder="little", signed=False)[4:]
         assert mac == packet[60:64]
-        iv = int.from_bytes(packet[56:60], 'big', signed=False) << 8
+        iv = int.from_bytes(packet[56:60], "big", signed=False) << 8
         output[1:56] = self.crypt_enc.decrypt(iv, packet[1:56])
         return bytes(output)
 
@@ -210,7 +216,10 @@ class Session:
             {"message_type": message_type, "command": command}
         )
 
-        if self._encrypted_protocol and message_type not in _ALWAYS_UNENCRYPTED_MESSAGES:
+        if (
+            self._encrypted_protocol
+            and message_type not in _ALWAYS_UNENCRYPTED_MESSAGES
+        ):
             usb_packet = self.encrypt_message(usb_packet)
 
         logging.debug(f"Sending packet: {usb_packet!r}")
@@ -225,7 +234,10 @@ class Session:
         assert usb_packet
         message_type = usb_packet[0]
 
-        if self._encrypted_protocol and message_type not in _ALWAYS_UNENCRYPTED_MESSAGES:
+        if (
+            self._encrypted_protocol
+            and message_type not in _ALWAYS_UNENCRYPTED_MESSAGES
+        ):
             usb_packet = self.decrypt_message(usb_packet)
 
         message_length = usb_packet[1]
