@@ -10,16 +10,18 @@ from typing import AnyStr, Callable, Iterator, Optional, Sequence, Tuple
 
 import construct
 
-from ._exceptions import ChecksumError, CommandError
+from ._exceptions import ChecksumError, CommandError, MissingFreeStyleKeys
 from ._freestyle_encryption import SpeckCMAC, SpeckEncrypt
 from ._hidwrapper import HidWrapper
 
-ABBOTT_VENDOR_ID = 0x1A61
+try:
+    from freestyle_keys import libre2 as libre2_keys
 
-_AUTH_ENC_MASTER_KEY = 0xDEADBEEF
-_AUTH_MAC_MASTER_KEY = 0xDEADBEEF
-_SESS_ENC_MASTER_KEY = 0xDEADBEEF
-_SESS_MAC_MASTER_KEY = 0xDEADBEEF
+    _HAS_LIBRE2_KEYS = True
+except ImportError:
+    _HAS_LIBRE2_KEYS = False
+
+ABBOTT_VENDOR_ID = 0x1A61
 
 _INIT_COMMAND = 0x01
 _INIT_RESPONSE = 0x71
@@ -125,15 +127,18 @@ class Session:
         self._encrypted_protocol = product_id in [0x3950]
 
     def encryption_handshake(self):
+        if not _HAS_LIBRE2_KEYS:
+            raise MissingFreeStyleKeys()
+
         self.send_command(0x05, b"")
         response = self.read_response()
         assert response[0] == 0x06
         serial = response[1][:13]
 
-        crypt = SpeckCMAC(_AUTH_ENC_MASTER_KEY)
+        crypt = SpeckCMAC(libre2_keys.AUTHORIZATION_ENCRYPTION_KEY)
         auth_enc_key = crypt.derive("AuthrEnc".encode(), serial)
         auth_enc = SpeckEncrypt(auth_enc_key)
-        crypt = SpeckCMAC(_AUTH_MAC_MASTER_KEY)
+        crypt = SpeckCMAC(libre2_keys.AUTHORIZATION_MAC_KEY)
         auth_mac_key = crypt.derive("AuthrMAC".encode(), serial)
         auth_mac = SpeckCMAC(auth_mac_key)
 
@@ -161,11 +166,11 @@ class Session:
         assert resp_dec[:8] == driver_rand
         assert resp_dec[8:] == reader_rand
 
-        crypt = SpeckCMAC(_SESS_ENC_MASTER_KEY)
+        crypt = SpeckCMAC(libre2_keys.SESSION_ENCRYPTION_KEY)
         ses_enc_key = crypt.derive(
             "SessnEnc".encode(), serial + reader_rand + driver_rand
         )
-        crypt = SpeckCMAC(_SESS_MAC_MASTER_KEY)
+        crypt = SpeckCMAC(libre2_keys.SESSION_MAC_KEY)
         ses_mac_key = crypt.derive(
             "SessnMAC".encode(), serial + reader_rand + driver_rand
         )
