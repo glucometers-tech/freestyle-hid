@@ -1,5 +1,9 @@
-class SpeckEncrypt():
+# SPDX-FileCopyrightText: 2023 The freestyle-hid Authors
+#
+# SPDX-License-Identifier: Apache-2.0
 
+
+class SpeckEncrypt:
     def __init__(self, key):
         # Perform key expansion and store the round keys
         self.key = key & ((2 ** 128) - 1)
