@@ -14,9 +14,9 @@ class TestFreeStyle(unittest.TestCase):
         """Test the generation of a new outgoing message."""
 
         self.assertEqual(
-            b"\0\x17\7command\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+            b"\x17\7command\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
             b"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
             _session._FREESTYLE_MESSAGE.build(
-                {"message_type": 23, "command": b"command"}
+                {"message_type": 23, "command": b"command", "mac": 0}
             ),
         )
