@@ -10,12 +10,20 @@ class ConnectionError(Exception):
     """Errors related to Session establishment."""
 
 
+class EncryptionHandshakeError(ConnectionError):
+    """Errors related to encryption handshake."""
+
+
 class ChecksumError(Exception):
     """Errors related to the transmission checksums."""
 
 
 class CommandError(Exception):
     """Errors related to the command stream."""
+
+
+class EncryptionNotInitialized(CommandError):
+    """Device needs encryption handshake."""
 
 
 class MissingFreeStyleKeys(Exception):
