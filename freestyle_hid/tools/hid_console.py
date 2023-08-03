@@ -60,6 +60,11 @@ click_log.basic_config(logger)
     callback=lambda ctx, param, value: pathlib.Path(value) if value else None,
     required=False,
 )
+@click.argument(
+    "command",
+    type=str,
+    required=False,
+)
 def main(
     *,
     text_command_type: int,
@@ -68,6 +73,7 @@ def main(
     device_path: Optional[pathlib.Path],
     encoding: str,
     encrypted_protocol: bool,
+    command: Optional[str],
 ):
     if not product_id and not device_path:
         raise click.UsageError(
@@ -84,6 +90,14 @@ def main(
     )
 
     session.connect()
+
+    if command is not None:
+        try:
+            print(session.send_text_command(bytes(command, "ascii")))
+        except freestyle_hid.CommandError as error:
+            print(f"! {error!r}")
+
+        return
 
     while True:
         if sys.stdin.isatty():
