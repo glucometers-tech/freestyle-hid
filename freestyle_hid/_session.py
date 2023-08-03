@@ -119,17 +119,18 @@ class Session:
         text_message_type: int,
         text_reply_message_type: int,
         encoding: str = "ascii",
+        encrypted: bool = False,
     ) -> None:
+        if encrypted and not _HAS_LIBRE2_KEYS:
+            raise MissingFreeStyleKeys()
+
         self._handle = HidWrapper.open(device_path, ABBOTT_VENDOR_ID, product_id)
         self._text_message_type = text_message_type
         self._text_reply_message_type = text_reply_message_type
         self._encoding = encoding
-        self._encrypted_protocol = product_id in [0x3950]
+        self._encrypted_protocol = encrypted
 
     def encryption_handshake(self):
-        if not _HAS_LIBRE2_KEYS:
-            raise MissingFreeStyleKeys()
-
         self.send_command(0x05, b"")
         response = self.read_response()
         assert response[0] == 0x06
@@ -179,9 +180,9 @@ class Session:
         # print("HANDSHAKE SUCCESSFUL!")
 
     def connect(self):
+        """Open connection to the device, starting the knocking sequence."""
         if self._encrypted_protocol:
             self.encryption_handshake()
-        """Open connection to the device, starting the knocking sequence."""
         self.send_command(_INIT_COMMAND, b"")
         response = self.read_response()
         if not _is_init_reply(response):

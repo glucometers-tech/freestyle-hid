@@ -46,6 +46,14 @@ click_log.basic_config(logger)
     help="Encoding to use to decode commands returned by the meter",
     default="ascii",
 )
+@click.option(
+    "--encrypted-protocol / --no-encrypted-protocol",
+    default=False,
+    help=(
+        "Whether to use the encrypted protocol to communicate to the device."
+        " This is necessary to talk to Libre2 glucometers."
+    ),
+)
 @click.argument(
     "device-path",
     type=click.Path(exists=True, dir_okay=False, writable=True, allow_dash=False),
@@ -59,6 +67,7 @@ def main(
     product_id: Optional[int],
     device_path: Optional[pathlib.Path],
     encoding: str,
+    encrypted_protocol: bool,
 ):
     if not product_id and not device_path:
         raise click.UsageError(
@@ -66,7 +75,12 @@ def main(
         )
 
     session = freestyle_hid.Session(
-        product_id, device_path, text_command_type, text_reply_type, encoding=encoding
+        product_id,
+        device_path,
+        text_command_type,
+        text_reply_type,
+        encoding=encoding,
+        encrypted=encrypted_protocol,
     )
 
     session.connect()
