@@ -56,8 +56,10 @@ click_log.basic_config(logger)
 )
 @click.argument(
     "device-path",
-    type=click.Path(exists=True, dir_okay=False, writable=True, allow_dash=False),
-    callback=lambda ctx, param, value: pathlib.Path(value) if value else None,
+    type=click.Path(exists=True, dir_okay=False, writable=True, allow_dash=True),
+    callback=lambda ctx, param, value: pathlib.Path(value)
+    if value and value != "-"
+    else None,
     required=False,
 )
 @click.argument(
