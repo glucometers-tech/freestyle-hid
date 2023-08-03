@@ -12,6 +12,7 @@ import click
 import click_log
 
 import freestyle_hid
+from freestyle_hid import models
 
 logger = logging.getLogger()
 click_log.basic_config(logger)
@@ -81,6 +82,11 @@ def main(
         raise click.UsageError(
             "One of --product-id or DEVICE_PATH need to be provided."
         )
+
+    if product_id == models.FREESTYLE_LIBRE_2:
+        # No matter if the user requested it or not, in this case we know
+        # the protocol needs to be encrypted.
+        encrypted_protocol = True
 
     session = freestyle_hid.Session(
         product_id,
