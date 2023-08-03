@@ -279,7 +279,7 @@ class Session:
         logging.debug(f"Sending packet: {usb_packet!r}")
         self._handle.write(usb_packet)
 
-    def send_command(self, message_type: int, command: bytes, encrypted: bool = False):
+    def send_command(self, message_type: int, command: bytes):
         """Send a raw command to the device.
 
         Args:
@@ -299,20 +299,25 @@ class Session:
 
         self._write_hid(message)
 
-    def read_response(self, encrypted: bool = False) -> tuple[int, bytes]:
+    def read_response(self) -> tuple[int, bytes]:
         """Read the response from the device and extracts it."""
         usb_packet = self._handle.read()
 
-        logging.debug(f"Read packet: {usb_packet!r}")
+        logging.debug(
+            f"Read {'possibly encrypted ' if self._encrypted_protocol else ''}packet: {usb_packet!r}"
+        )
 
         assert usb_packet
         message_type = usb_packet[0]
 
-        if (
+        encrypted = (
             self._encrypted_protocol
             and message_type not in _ALWAYS_UNENCRYPTED_MESSAGES
-        ):
+        )
+
+        if encrypted:
             usb_packet = self.decrypt_message(usb_packet)
+            logging.debug(f"Decoded packet: {usb_packet!r}")
 
         message_length = usb_packet[1]
         message_end_idx = 2 + message_length
@@ -327,7 +332,7 @@ class Session:
         # unencrypted, so we need to inspect them before we decide what the
         # message content is.
         if _is_keepalive_response(message):
-            return self.read_response(encrypted=encrypted)
+            return self.read_response()
 
         if _is_unknown_message_error(message):
             raise CommandError("Invalid command")
