@@ -6,7 +6,8 @@ import logging
 import pathlib
 import random
 import re
-from typing import AnyStr, Callable, Iterator, Optional, Sequence, Tuple
+from collections.abc import Iterator, Sequence
+from typing import AnyStr, Callable, Optional
 
 import construct
 
@@ -57,8 +58,8 @@ _ALWAYS_UNENCRYPTED_MESSAGES = (
 
 def _create_matcher(
     message_type: int, content: Optional[bytes]
-) -> Callable[[Tuple[int, bytes]], bool]:
-    def _matcher(message: Tuple[int, bytes]) -> bool:
+) -> Callable[[tuple[int, bytes]], bool]:
+    def _matcher(message: tuple[int, bytes]) -> bool:
         return message[0] == message_type and (content is None or content == message[1])
 
     return _matcher
@@ -298,7 +299,7 @@ class Session:
 
         self._write_hid(message)
 
-    def read_response(self, encrypted: bool = False) -> Tuple[int, bytes]:
+    def read_response(self, encrypted: bool = False) -> tuple[int, bytes]:
         """Read the response from the device and extracts it."""
         usb_packet = self._handle.read()
 

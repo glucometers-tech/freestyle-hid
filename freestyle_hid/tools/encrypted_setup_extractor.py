@@ -7,7 +7,8 @@
 
 import logging
 import sys
-from typing import BinaryIO, Optional, Sequence
+from collections.abc import Sequence
+from typing import BinaryIO, Optional
 
 import click
 import click_log
